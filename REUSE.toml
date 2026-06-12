@@ -1,7 +1,7 @@
 version = 1
-SPDX-PackageName = "all-ok"
+SPDX-PackageName = "all-jobs-ok"
 SPDX-PackageSupplier = "QBayLogic B.V. <devops@qbaylogic.com>"
-SPDX-PackageDownloadLocation = "https://github.com/clash-lang/all-ok"
+SPDX-PackageDownloadLocation = "https://github.com/clash-lang/all-jobs-ok"
 
 [[annotations]]
 path = [
