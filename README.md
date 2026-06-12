@@ -37,7 +37,7 @@ all:
   runs-on: ubuntu-24.04
   steps:
     - uses: actions/checkout@v6
-    - uses: clash-lang/all-jobs-ok@v1
+    - uses: clash-lang/all-jobs-ok@v2
       with:
         needs: ${{ toJSON(needs) }}
 ```
@@ -69,7 +69,7 @@ Errors are annotated on the workflow file in pull requests.
 Example with all of them:
 
 ```yaml
-- uses: clash-lang/all-jobs-ok@v1
+- uses: clash-lang/all-jobs-ok@v2
   with:
     workflow-file: .github/workflows/ci.yml
     exclude: |
