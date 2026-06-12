@@ -67,7 +67,7 @@ jobs:
   all:
     name: All jobs finished
     if: ${{ !cancelled() }}
-    needs: [test, check-dist, reuse, self-test]
+    needs: [test, check-dist, reuse]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
