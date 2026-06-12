@@ -1,4 +1,4 @@
-# all-ok
+# all-jobs-ok
 
 Check that a job called `all` depends on every other job in the workflow, so
 branch protection only needs a single required status check.
@@ -37,7 +37,7 @@ all:
   runs-on: ubuntu-24.04
   steps:
     - uses: actions/checkout@v6
-    - uses: clash-lang/all-ok@v1
+    - uses: clash-lang/all-jobs-ok@v1
 ```
 
 The action checks that the workflow it runs in has a job called `all` whose
@@ -60,7 +60,7 @@ Errors are annotated on the workflow file in pull requests.
 Example with both:
 
 ```yaml
-- uses: clash-lang/all-ok@v1
+- uses: clash-lang/all-jobs-ok@v1
   with:
     workflow-file: .github/workflows/ci.yml
     exclude: |

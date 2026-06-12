@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 {
-  description = "Development environment for the all-ok GitHub Action";
+  description = "Development environment for the all-jobs-ok GitHub Action";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
