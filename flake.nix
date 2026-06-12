@@ -24,7 +24,7 @@
       devShells = forEachSystem (pkgs: {
         default = pkgs.mkShell {
           packages = [
-            pkgs.nodejs_20
+            pkgs.nodejs_24
             pkgs.reuse
           ];
         };

@@ -8,6 +8,7 @@ import * as core from "@actions/core";
 
 import { InputError, resolveInputs } from "./inputs";
 import { ALL_JOB, lintWorkflow } from "./lint";
+import { checkNeedsResults } from "./results";
 
 export function run(): void {
   try {
@@ -18,6 +19,12 @@ export function run(): void {
       },
       process.env,
     );
+
+    const needsInput = core.getInput("needs").trim();
+    const needsErrors = needsInput === "" ? [] : checkNeedsResults(needsInput);
+    for (const error of needsErrors) {
+      core.error(error);
+    }
 
     if (!existsSync(inputs.workflowFile)) {
       core.setFailed(
@@ -39,13 +46,25 @@ export function run(): void {
       core.error(error, { file });
     }
 
-    if (result.errors.length > 0) {
-      core.setFailed(
-        `Found ${result.errors.length} problem(s) with the '${ALL_JOB}' ` +
-          `job in ${file}`,
-      );
+    if (result.errors.length > 0 || needsErrors.length > 0) {
+      const problems: string[] = [];
+      if (result.errors.length > 0) {
+        problems.push(
+          `${result.errors.length} problem(s) with the '${ALL_JOB}' ` +
+            `job in ${file}`,
+        );
+      }
+      if (needsErrors.length > 0) {
+        problems.push(
+          `${needsErrors.length} problem(s) with the results of needed jobs`,
+        );
+      }
+      core.setFailed(`Found ${problems.join(" and ")}`);
     } else {
       core.info(`OK: '${ALL_JOB}' in ${file} depends on all other jobs`);
+      if (needsInput !== "") {
+        core.info("OK: no needed job failed and at least one succeeded");
+      }
     }
   } catch (err) {
     if (err instanceof InputError) {

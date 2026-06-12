@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -64,6 +64,20 @@ jobs:
             exit 1
           fi
 
+      - name: Run with a failing needs context
+        id: failed-needs
+        continue-on-error: true
+        uses: ./
+        with:
+          needs: '{"test": {"result": "failure"}}'
+
+      - name: Check that the failing needs context was rejected
+        run: |
+          if [[ "${{ steps.failed-needs.outcome }}" != "failure" ]]; then
+            echo "Expected the action to fail on a 'failure' job result"
+            exit 1
+          fi
+
   all:
     name: All jobs finished
     if: ${{ !cancelled() }}
@@ -71,4 +85,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - uses: clash-lang/all-jobs-ok@v1
+      - uses: ./
+        with:
+          needs: ${{ toJSON(needs) }}
