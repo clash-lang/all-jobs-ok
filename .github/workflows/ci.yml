@@ -70,7 +70,5 @@ jobs:
     needs: [test, check-dist, reuse, self-test]
     runs-on: ubuntu-24.04
     steps:
-      - name: Check dependencies for failures
-        run: |
-          if ${{ contains(needs.*.result, 'failure') }}; then exit 1; fi
-          if ! ${{ contains(needs.*.result, 'success') }}; then exit 1; fi
+      - uses: actions/checkout@v6
+      - uses: clash-lang/all-ok@v1
