@@ -27,12 +27,17 @@ longer gates merges. This action fails CI when that happens.
 
 ## Usage
 
-Add a step to any job in the workflow (a lint job is a natural place), after
-checking out the repository:
+Add an 'all' job in the workflow, after checking out the repository:
 
 ```yaml
-- uses: actions/checkout@v6
-- uses: clash-lang/all-ok@v1
+all:
+  name: All jobs finished
+  if: ${{ !cancelled() }}
+  needs: [your-job-1, your-job-2]
+  runs-on: ubuntu-24.04
+  steps:
+    - uses: actions/checkout@v6
+    - uses: clash-lang/all-ok@v1
 ```
 
 The action checks that the workflow it runs in has a job called `all` whose
