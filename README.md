@@ -78,11 +78,11 @@ Example with both:
 
 A [Nix](https://nixos.org/) flake provides the development environment:
 
-```console
-$ nix develop
-$ npm ci
-$ npm test
-$ npm run build   # refresh dist/index.js (committed; CI checks it is current)
+```bash
+nix develop
+npm ci
+npm test
+npm run build   # refresh dist/index.js (committed; CI checks it is current)
 ```
 
 ## Acknowledgements
@@ -92,5 +92,6 @@ This action grew out of the `all_check.py` script in
 written for Google LLC.
 
 ## License
+
 [BSD-2-Clause](LICENSES/BSD-2-Clause.txt). This repository is
 [REUSE](https://reuse.software/) compliant.
