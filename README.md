@@ -14,7 +14,7 @@ all:
   name: All jobs finished
   if: ${{ !cancelled() }}
   needs: [build, lint, test]
-  runs-on: ubuntu-latest
+  runs-on: ubuntu-slim
   steps:
     - run: |
         if ${{ contains(needs.*.result, 'failure') }}; then exit 1; fi
@@ -34,7 +34,7 @@ all:
   name: All jobs finished
   if: ${{ !cancelled() }}
   needs: [your-job-1, your-job-2]
-  runs-on: ubuntu-24.04
+  runs-on: ubuntu-slim
   steps:
     - uses: actions/checkout@v6
     - uses: clash-lang/all-jobs-ok@v2
