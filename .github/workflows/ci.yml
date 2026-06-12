@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 QBayLogic B.V.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx prettier --check .
+      - run: npx vitest run
+
+  check-dist:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check that dist/ is up to date with src/
+        run: git diff --exit-code dist/
+
+  reuse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: fsfe/reuse-action@v5
+
+  self-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check this workflow with the action itself
+        uses: ./
+
+      - name: Run against a known-broken workflow
+        id: broken
+        continue-on-error: true
+        uses: ./
+        with:
+          workflow-file: src/__fixtures__/broken.yml
+
+      - name: Check that the broken workflow was rejected
+        run: |
+          if [[ "${{ steps.broken.outcome }}" != "failure" ]]; then
+            echo "Expected the action to fail on src/__fixtures__/broken.yml"
+            exit 1
+          fi
+
+  all:
+    name: All jobs finished
+    if: ${{ !cancelled() }}
+    needs: [test, check-dist, reuse, self-test]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check dependencies for failures
+        run: |
+          if ${{ contains(needs.*.result, 'failure') }}; then exit 1; fi
+          if ! ${{ contains(needs.*.result, 'success') }}; then exit 1; fi

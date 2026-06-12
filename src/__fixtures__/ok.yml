@@ -1,0 +1,11 @@
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
+  notify-slack:
+    runs-on: ubuntu-latest
+  all:
+    runs-on: ubuntu-latest
+    needs: [build, test]

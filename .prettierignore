@@ -1,0 +1,5 @@
+dist/
+LICENSES/
+flake.lock
+package-lock.json
+src/__fixtures__/bittide-ci.yml

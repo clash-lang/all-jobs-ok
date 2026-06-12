@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 QBayLogic B.V.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+name: "all-ok"
+description: >-
+  Check that a job called 'all' depends on every other job in the workflow,
+  so branch protection only needs a single required status check.
+author: "QBayLogic B.V."
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  workflow-file:
+    description: >-
+      Path to the workflow file to check, relative to the repository root.
+      Defaults to the workflow file of the current run. The repository must
+      be checked out (actions/checkout) for the file to be readable.
+    required: false
+    default: ""
+  exclude:
+    description: >-
+      Newline-separated job ids that must NOT be listed in 'all.needs', e.g.
+      jobs that run after the 'all' job to react to its result.
+    required: false
+    default: ""
+
+runs:
+  using: node20
+  main: dist/index.js
