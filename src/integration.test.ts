@@ -19,6 +19,7 @@ interface RunOptions {
   workflowFile?: string;
   exclude?: string;
   workflowRef?: string;
+  needs?: string;
 }
 
 function runAction(opts: RunOptions) {
@@ -31,6 +32,9 @@ function runAction(opts: RunOptions) {
   }
   if (opts.exclude !== undefined) {
     env["INPUT_EXCLUDE"] = opts.exclude;
+  }
+  if (opts.needs !== undefined) {
+    env["INPUT_NEEDS"] = opts.needs;
   }
   if (opts.workflowRef !== undefined) {
     env["GITHUB_WORKFLOW_REF"] = opts.workflowRef;
@@ -80,6 +84,59 @@ describe("runner contract", () => {
     const result = runAction({});
     expect(result.status).toBe(1);
     expect(result.stdout).toContain("GITHUB_WORKFLOW_REF is not set");
+  });
+
+  it("exits 0 when all needed jobs succeeded", () => {
+    const result = runAction({
+      workflowFile: "ok.yml",
+      exclude: "notify-slack",
+      needs: JSON.stringify({
+        build: { result: "success", outputs: {} },
+        test: { result: "success", outputs: {} },
+      }),
+    });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(
+      "OK: no needed job failed and at least one succeeded",
+    );
+  });
+
+  it("exits non-zero when a needed job failed", () => {
+    const result = runAction({
+      workflowFile: "ok.yml",
+      exclude: "notify-slack",
+      needs: JSON.stringify({
+        build: { result: "failure", outputs: {} },
+        test: { result: "success", outputs: {} },
+      }),
+    });
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("Needed jobs failed: {build}");
+  });
+
+  it("exits non-zero when no needed job succeeded", () => {
+    const result = runAction({
+      workflowFile: "ok.yml",
+      exclude: "notify-slack",
+      needs: JSON.stringify({
+        build: { result: "skipped", outputs: {} },
+        test: { result: "skipped", outputs: {} },
+      }),
+    });
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("No needed job succeeded");
+  });
+
+  it("exits non-zero when the needs input is not valid JSON", () => {
+    const result = runAction({
+      workflowFile: "ok.yml",
+      exclude: "notify-slack",
+      needs: "not json",
+    });
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain(
+      "Could not parse the 'needs' input as JSON",
+    );
   });
 
   it("accepts bittide-hardware's real ci.yml (regression)", () => {

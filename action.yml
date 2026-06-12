@@ -24,6 +24,14 @@ inputs:
       jobs that run after the 'all' job to react to its result.
     required: false
     default: ""
+  needs:
+    description: >-
+      The 'needs' context of the job running this action, passed verbatim as
+      "${{ toJSON(needs) }}". When set, the action also fails if any needed
+      job failed or if no needed job succeeded, replacing the hand-written
+      shell check on needs.*.result.
+    required: false
+    default: ""
 
 runs:
   using: node20

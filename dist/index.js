@@ -27273,6 +27273,39 @@ function lintWorkflow(source, exclude) {
   return { errors, warnings };
 }
 
+// src/results.ts
+var PASS_IT_VERBATIM = "pass the needs context verbatim: needs: ${{ toJSON(needs) }}";
+function checkNeedsResults(needsJson) {
+  let needs;
+  try {
+    needs = JSON.parse(needsJson);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return [
+      `Could not parse the 'needs' input as JSON: ${message} \u2014 ` + PASS_IT_VERBATIM
+    ];
+  }
+  if (typeof needs !== "object" || needs === null || Array.isArray(needs)) {
+    return [`The 'needs' input is not a JSON object \u2014 ${PASS_IT_VERBATIM}`];
+  }
+  const results = /* @__PURE__ */ new Map();
+  for (const [jobId, job] of Object.entries(needs)) {
+    const result = typeof job === "object" && job !== null ? job["result"] : void 0;
+    results.set(jobId, typeof result === "string" ? result : "unknown");
+  }
+  const errors = [];
+  const failed = [...results].filter(([, result]) => result === "failure").map(([jobId]) => jobId);
+  if (failed.length > 0) {
+    errors.push(`Needed jobs failed: ${fmtSet(failed)}`);
+  }
+  const anySuccess = [...results.values()].some((r) => r === "success");
+  if (!anySuccess) {
+    const summary = [...results].sort(([a], [b]) => a.localeCompare(b)).map(([jobId, result]) => `${jobId}: ${result}`).join(", ") || "the needs context is empty";
+    errors.push(`No needed job succeeded (${summary})`);
+  }
+  return errors;
+}
+
 // src/main.ts
 function run() {
   try {
@@ -27283,6 +27316,11 @@ function run() {
       },
       process.env
     );
+    const needsInput = core.getInput("needs").trim();
+    const needsErrors = needsInput === "" ? [] : checkNeedsResults(needsInput);
+    for (const error2 of needsErrors) {
+      core.error(error2);
+    }
     if (!(0, import_node_fs.existsSync)(inputs.workflowFile)) {
       core.setFailed(
         `Workflow file not found: ${inputs.workflowFile} \u2014 did you run actions/checkout first, or do you need to pass the 'workflow-file' input?`
@@ -27298,12 +27336,24 @@ function run() {
     for (const error2 of result.errors) {
       core.error(error2, { file });
     }
-    if (result.errors.length > 0) {
-      core.setFailed(
-        `Found ${result.errors.length} problem(s) with the '${ALL_JOB}' job in ${file}`
-      );
+    if (result.errors.length > 0 || needsErrors.length > 0) {
+      const problems = [];
+      if (result.errors.length > 0) {
+        problems.push(
+          `${result.errors.length} problem(s) with the '${ALL_JOB}' job in ${file}`
+        );
+      }
+      if (needsErrors.length > 0) {
+        problems.push(
+          `${needsErrors.length} problem(s) with the results of needed jobs`
+        );
+      }
+      core.setFailed(`Found ${problems.join(" and ")}`);
     } else {
       core.info(`OK: '${ALL_JOB}' in ${file} depends on all other jobs`);
+      if (needsInput !== "") {
+        core.info("OK: no needed job failed and at least one succeeded");
+      }
     }
   } catch (err) {
     if (err instanceof InputError) {

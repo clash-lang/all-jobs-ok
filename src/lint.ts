@@ -12,7 +12,7 @@ export interface LintResult {
   warnings: string[];
 }
 
-function fmtSet(items: Iterable<string>): string {
+export function fmtSet(items: Iterable<string>): string {
   return `{${[...items].sort().join(", ")}}`;
 }
 
