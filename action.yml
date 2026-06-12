@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
-name: "all-ok"
+name: "all-jobs-ok"
 description: >-
-  Check that a job called 'all' depends on every other job in the workflow,
-  so branch protection only needs a single required status check.
+  Require all jobs to pass CI
 author: "QBayLogic B.V."
 branding:
   icon: check-circle
