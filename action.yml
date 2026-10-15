@@ -14,10 +14,12 @@ inputs:
   workflow-file:
     description: >-
       Path to the workflow file to check, relative to the repository root.
-      Defaults to the workflow file of the current run. The repository must
-      be checked out (actions/checkout) for the file to be readable.
+      Defaults to the workflow file that defines the current job, which for a
+      reusable workflow is the reusable workflow itself, not its caller. The
+      repository must be checked out (actions/checkout) for the file to be
+      readable.
     required: false
-    default: ""
+    default: ${{ job.workflow_file_path }}
   exclude:
     description: >-
       Newline-separated job ids that must NOT be listed in 'all.needs', e.g.

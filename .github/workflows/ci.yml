@@ -78,10 +78,14 @@ jobs:
             exit 1
           fi
 
+  self-test-reusable:
+    name: Self-test in a reusable workflow
+    uses: ./.github/workflows/self-test-reusable.yml
+
   all:
     name: All jobs finished
     if: ${{ !cancelled() }}
-    needs: [test, check-dist, reuse, self-test]
+    needs: [test, check-dist, reuse, self-test, self-test-reusable]
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6

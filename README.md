@@ -60,11 +60,11 @@ Errors are annotated on the workflow file in pull requests.
 
 ## Inputs
 
-| Input           | Default                         | Description                                                                                                                      |
-| --------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `workflow-file` | the workflow of the current run | Path to the workflow file to check, relative to the repository root.                                                             |
-| `exclude`       | _empty_                         | Newline-separated job ids that must **not** be in `all.needs`, e.g. jobs that run after `all` to react to its result.            |
-| `needs`         | _empty_                         | The `needs` context, passed verbatim as `${{ toJSON(needs) }}`. When set, the action also checks the results of the needed jobs. |
+| Input           | Default                       | Description                                                                                                                      |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `workflow-file` | the workflow defining the job | Path to the workflow file to check, relative to the repository root.                                                             |
+| `exclude`       | _empty_                       | Newline-separated job ids that must **not** be in `all.needs`, e.g. jobs that run after `all` to react to its result.            |
+| `needs`         | _empty_                       | The `needs` context, passed verbatim as `${{ toJSON(needs) }}`. When set, the action also checks the results of the needed jobs. |
 
 Example with all of them:
 
@@ -86,6 +86,10 @@ Example with all of them:
   `contains(needs.*.result, ...)` pattern above. With the `needs` input, the
   action does that check itself. Either way, give the job
   `if: ${{ !cancelled() }}` so it also runs when a dependency failed.
+- In a [reusable workflow](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows),
+  the action checks the reusable workflow, not its caller. If the reusable
+  workflow lives in another repository, check that repository out as well
+  and point `workflow-file` at it.
 - `dist/index.js` is a bundle of our BSD-2-Clause code together with the npm
   packages [`@actions/core`](https://github.com/actions/toolkit) (MIT) and
   [`yaml`](https://github.com/eemeli/yaml) (ISC).

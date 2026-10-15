@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 QBayLogic B.V.
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+# Called from ci.yml. Inside a reusable workflow, the action must check the
+# reusable workflow (this file), not its caller. This file's 'all' job
+# deliberately forgets a job, so the action should fail; checking ci.yml
+# instead would pass.
+
+name: Reusable workflow self-test
+
+on:
+  workflow_call:
+
+jobs:
+  listed:
+    runs-on: ubuntu-slim
+    steps:
+      - run: "true"
+
+  forgotten:
+    runs-on: ubuntu-slim
+    steps:
+      - run: "true"
+
+  all:
+    name: Check this reusable workflow
+    needs: [listed]
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run the action, which should check this file
+        id: lint
+        continue-on-error: true
+        uses: ./
+
+      - name: Check that the forgotten job was reported
+        run: |
+          if [[ "${{ steps.lint.outcome }}" != "failure" ]]; then
+            echo "Expected the action to check this reusable workflow and"
+            echo "reject it, but it passed. Did it check the caller instead?"
+            exit 1
+          fi
