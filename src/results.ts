@@ -8,15 +8,23 @@ const PASS_IT_VERBATIM =
   "pass the needs context verbatim: needs: ${{ toJSON(needs) }}";
 
 /**
- * Check the results of the needed jobs, mirroring the shell gate this action
- * replaces:
+ * Results a needed job may have without failing the gate. Everything else
+ * fails it: besides the documented 'failure' and 'cancelled', GitHub also
+ * reports undocumented results such as 'abandoned', for a job that no runner
+ * picked up.
+ */
+const OK_RESULTS: ReadonlySet<string> = new Set(["success", "skipped"]);
+
+/**
+ * Check the results of the needed jobs. This is stricter than the shell gate
+ * this action replaces, which only catches 'failure':
  *
  *     if ${{ contains(needs.*.result, 'failure') }}; then exit 1; fi
  *     if ! ${{ contains(needs.*.result, 'success') }}; then exit 1; fi
  *
  * @param needsJson The `needs` context as JSON, i.e. `toJSON(needs)`.
- * @returns One error per problem; empty when no needed job failed and at
- *   least one succeeded.
+ * @returns One error per problem; empty when every needed job succeeded or
+ *   was skipped, and at least one succeeded.
  */
 export function checkNeedsResults(needsJson: string): string[] {
   let needs: unknown;
@@ -44,11 +52,11 @@ export function checkNeedsResults(needsJson: string): string[] {
 
   const errors: string[] = [];
 
-  const failed = [...results]
-    .filter(([, result]) => result === "failure")
-    .map(([jobId]) => jobId);
-  if (failed.length > 0) {
-    errors.push(`Needed jobs failed: ${fmtSet(failed)}`);
+  const notOk = [...results]
+    .filter(([, result]) => !OK_RESULTS.has(result))
+    .map(([jobId, result]) => `${jobId}: ${result}`);
+  if (notOk.length > 0) {
+    errors.push(`Needed jobs did not succeed: ${fmtSet(notOk)}`);
   }
 
   const anySuccess = [...results.values()].some((r) => r === "success");
