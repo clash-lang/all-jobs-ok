@@ -44,15 +44,19 @@ all:
 
 The action checks that the workflow it runs in has a job called `all` whose
 `needs:` lists exactly every other job. Given the `needs` input, it also
-performs the result check from the shell snippet above, so no extra `run:`
-step is needed: the action fails when any needed job failed, or when none
-succeeded (e.g. all were skipped). It fails with one error per problem:
+checks the results of the needed jobs, so no extra `run:` step is needed: the
+action fails when any needed job did not succeed and was not skipped, or when
+none succeeded (e.g. all were skipped). This is stricter than the shell
+snippet above, which only catches `failure` and lets through a job that was
+`cancelled`, or one that never got a runner (which GitHub reports as the
+undocumented result `abandoned`). It fails with one error per problem:
 
 - `Not all jobs mentioned in all.needs: {...}` — jobs missing from the gate
 - `Non-existing jobs found in all.needs: {...}` — stale entries
 - `Excluded jobs found in all.needs: {...}` — excluded jobs that are listed
   anyway
-- `Needed jobs failed: {...}` — a job the gate depends on failed
+- `Needed jobs did not succeed: {...}` — a job the gate depends on failed,
+  was cancelled, or otherwise neither succeeded nor was skipped
 - `No needed job succeeded (...)` — nothing failed, but nothing succeeded
   either
 

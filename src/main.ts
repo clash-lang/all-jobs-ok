@@ -63,7 +63,10 @@ export function run(): void {
     } else {
       core.info(`OK: '${ALL_JOB}' in ${file} depends on all other jobs`);
       if (needsInput !== "") {
-        core.info("OK: no needed job failed and at least one succeeded");
+        core.info(
+          "OK: every needed job succeeded or was skipped, and at least " +
+            "one succeeded",
+        );
       }
     }
   } catch (err) {

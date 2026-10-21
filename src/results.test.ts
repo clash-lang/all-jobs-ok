@@ -33,15 +33,37 @@ describe("checkNeedsResults", () => {
   it("fails when a needed job failed", () => {
     expect(
       checkNeedsResults(needs({ build: "failure", test: "success" })),
-    ).toEqual(["Needed jobs failed: {build}"]);
+    ).toEqual(["Needed jobs did not succeed: {build: failure}"]);
   });
 
-  it("lists every failed job", () => {
+  it("fails when a needed job was cancelled", () => {
+    expect(
+      checkNeedsResults(needs({ build: "cancelled", test: "success" })),
+    ).toEqual(["Needed jobs did not succeed: {build: cancelled}"]);
+  });
+
+  // A job that no runner picked up ("The job was not acquired by Runner of
+  // type self-hosted even after multiple attempts") ends up as 'abandoned'.
+  it("fails on results GitHub does not document, like 'abandoned'", () => {
     expect(
       checkNeedsResults(
-        needs({ test: "failure", build: "failure", docs: "success" }),
+        needs({
+          packages_common: "success",
+          packages_other: "abandoned",
+          hackage_sdist: "skipped",
+        }),
       ),
-    ).toEqual(["Needed jobs failed: {build, test}"]);
+    ).toEqual(["Needed jobs did not succeed: {packages_other: abandoned}"]);
+  });
+
+  it("lists every job that did not succeed", () => {
+    expect(
+      checkNeedsResults(
+        needs({ test: "failure", build: "cancelled", docs: "success" }),
+      ),
+    ).toEqual([
+      "Needed jobs did not succeed: {build: cancelled, test: failure}",
+    ]);
   });
 
   it("fails when no needed job succeeded", () => {
@@ -54,7 +76,7 @@ describe("checkNeedsResults", () => {
     expect(
       checkNeedsResults(needs({ build: "failure", docs: "skipped" })),
     ).toEqual([
-      "Needed jobs failed: {build}",
+      "Needed jobs did not succeed: {build: failure}",
       "No needed job succeeded (build: failure, docs: skipped)",
     ]);
   });
@@ -68,7 +90,10 @@ describe("checkNeedsResults", () => {
   it("treats a malformed entry as an unknown result", () => {
     expect(
       checkNeedsResults(JSON.stringify({ build: null, test: {} })),
-    ).toEqual(["No needed job succeeded (build: unknown, test: unknown)"]);
+    ).toEqual([
+      "Needed jobs did not succeed: {build: unknown, test: unknown}",
+      "No needed job succeeded (build: unknown, test: unknown)",
+    ]);
   });
 
   it("rejects input that is not valid JSON", () => {

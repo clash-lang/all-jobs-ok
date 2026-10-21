@@ -27275,6 +27275,7 @@ function lintWorkflow(source, exclude) {
 
 // src/results.ts
 var PASS_IT_VERBATIM = "pass the needs context verbatim: needs: ${{ toJSON(needs) }}";
+var OK_RESULTS = /* @__PURE__ */ new Set(["success", "skipped"]);
 function checkNeedsResults(needsJson) {
   let needs;
   try {
@@ -27294,9 +27295,9 @@ function checkNeedsResults(needsJson) {
     results.set(jobId, typeof result === "string" ? result : "unknown");
   }
   const errors = [];
-  const failed = [...results].filter(([, result]) => result === "failure").map(([jobId]) => jobId);
-  if (failed.length > 0) {
-    errors.push(`Needed jobs failed: ${fmtSet(failed)}`);
+  const notOk = [...results].filter(([, result]) => !OK_RESULTS.has(result)).map(([jobId, result]) => `${jobId}: ${result}`);
+  if (notOk.length > 0) {
+    errors.push(`Needed jobs did not succeed: ${fmtSet(notOk)}`);
   }
   const anySuccess = [...results.values()].some((r) => r === "success");
   if (!anySuccess) {
@@ -27352,7 +27353,9 @@ function run() {
     } else {
       core.info(`OK: '${ALL_JOB}' in ${file} depends on all other jobs`);
       if (needsInput !== "") {
-        core.info("OK: no needed job failed and at least one succeeded");
+        core.info(
+          "OK: every needed job succeeded or was skipped, and at least one succeeded"
+        );
       }
     }
   } catch (err) {

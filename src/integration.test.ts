@@ -97,7 +97,8 @@ describe("runner contract", () => {
     });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      "OK: no needed job failed and at least one succeeded",
+      "OK: every needed job succeeded or was skipped, and at least one " +
+        "succeeded",
     );
   });
 
@@ -111,7 +112,9 @@ describe("runner contract", () => {
       }),
     });
     expect(result.status).toBe(1);
-    expect(result.stdout).toContain("Needed jobs failed: {build}");
+    expect(result.stdout).toContain(
+      "Needed jobs did not succeed: {build: failure}",
+    );
   });
 
   it("exits non-zero when no needed job succeeded", () => {
